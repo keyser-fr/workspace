@@ -1,4 +1,4 @@
-# Deloyer lvm sur une debian fraichement installe( par exemple pour uune dedibox- Oct 25, 2017
+# Deployer lvm sur une debian fraichement installe (par exemple pour une dedibox) - Oct 25, 2017
 
 [Source](http://tutos.tangui.eu.org/2017/10/25/deployer-lvm-debian/)
 
