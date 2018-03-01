@@ -1,0 +1,12 @@
+  [backends]
+    [backends.backend-xymon]
+      [backends.backend-xymon.servers.server-xymon]
+         url = "http://sd-XXXXX.dedibox.fr/"
+
+  [frontends]
+    [frontends.frontend-Host-xymon-scriptshell-net-0]
+      backend = "backend-xymon"
+      passHostHeader = true
+      entrypoints = ["http", "https"]
+        [frontends.frontend-Host-xymon-scriptshell-net-0.routes.route-frontend-Host-xymon-scriptshell-net-0]
+        rule = "Host:xymon.scriptshell.net"

@@ -1,0 +1,91 @@
+# traefik.toml
+################################################################
+# Global configuration
+################################################################
+
+defaultEntryPoints = ["http", "https"]
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+
+  [entryPoints.dashboard]
+  address = ":8090"
+     
+  [entryPoints.api]
+  address = ":8080"
+  [entryPoints.api.auth]
+    [entryPoints.api.auth.basic]
+      # Command: htpasswd -n admin
+      users = ["return htpasswd command"]
+  [api.statistics]
+    recentErrors = 10
+
+  [entryPoints.ping]
+  address = ":8081"
+  
+  [entryPoints.https]
+  address = ":443"
+  [entryPoints.https.tls]
+
+[ping]
+entryPoint = "ping"
+
+[api]
+entryPoint = "api"
+dashboard = true
+
+# Enable ACME (Let's Encrypt): automatic SSL.
+# https://docs.traefik.io/configuration/acme/
+[acme]
+email = "email@example.com"
+storage = "/etc/traefik/acme/acme.json"
+entryPoint = "https"
+acmeLogging = false
+onHostRule = false # For generete unique certificat for domain
+
+[acme.httpChallenge]
+  entryPoint = "http"
+
+  [acme.dnsChallenge]
+  # https://api.ovh.com/createToken/
+  # https://eu.api.ovh.com/console/
+  # https://github.com/wheniwork/harpoon/blob/master/docker-compose.yml
+  # https://www.bardina.net/traefik-gitlab-docker/
+  provider = "ovh"
+  delayBeforeCheck = 0
+
+[[acme.domains]]
+  main = "example.com"
+  sans = ["subdomain1.example.com",
+       "subdomain2.example.com",
+       ...,
+       "subdomainN.example.com",       
+       ]
+
+# Accepted values, in order of severity: "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "PANIC"
+# Messages at and above the selected level will be logged.
+[traefikLog]
+  filePath = "/etc/traefik/logs/traefik.log"
+  logLevel = "DEBUG"
+  format = "common" # "json" # or "common"
+
+[accessLog]
+  filePath = "/etc/traefik/logs/access.log"
+  logLevel = "INFO"
+  format = "common" # "json" # or "common"
+
+[file]
+  directory = "/etc/traefik/toml"
+  watch = true
+
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+domain = "scriptshell.net"
+watch = true
+exposedbydefault = true
+
+# https://docs.traefik.io/configuration/metrics/
+# [metrics]

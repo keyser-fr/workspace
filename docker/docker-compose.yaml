@@ -1,0 +1,242 @@
+version: '3'
+
+# Networks configuration
+# networks:
+#   mongodb:
+#     driver: bridge
+    
+# Services configuration
+services:
+
+  ###########
+  # TRAEFIK #
+  ###########
+
+  # https://www.digitalocean.com/community/tutorials/how-to-use-traefik-as-a-reverse-proxy-for-docker-containers-on-ubuntu-16-04
+
+  traefik:
+    container_name: traefik
+    image: traefik:latest
+    network_mode: "host"
+    # restart: always
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "$PWD/traefik.toml:/etc/traefik/traefik.toml"
+      - "$PWD/toml/:/etc/traefik/toml/"
+      - "$PWD/logs/:/etc/traefik/logs/"
+      - "$PWD/acme/:/etc/traefik/acme/"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    labels:
+      - "traefik.frontend.rule=Host:traefik.example.com"
+      - "traefik.backend=traefik"
+      - "traefik.frontend.entryPoints=http,https"
+      - "traefik.port=8080"
+    environment:
+      # https://api.ovh.com/createToken/
+      - "OVH_ENDPOINT=<provider_endpoint>" # 'ovh-eu' for OVH
+      - "OVH_APPLICATION_KEY=<application_key>"
+      - "OVH_APPLICATION_SECRET=<application_secret>"
+      - "OVH_CONSUMER_KEY=<consumer_key>"
+
+  #############
+  # PORTAINER #
+  #############
+
+  portainer:
+    container_name: portainer
+    image: portainer/portainer:latest
+    network_mode: "bridge"
+    restart: unless-stopped
+    labels:
+      - "traefik.frontend.rule=Host:portainer.example.com"
+      - "traefik.backend=portainer"
+      - "traefik.frontend.entryPoints=http,https"
+      - "traefik.port=9000"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "$PWD/portainer:/data"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  ##########
+  # WHOAMI #
+  ##########
+
+  whoami:
+    container_name: whoami
+    image: jwilder/whoami:latest
+    network_mode: "bridge"
+    restart: unless-stopped
+    labels:
+      - "traefik.frontend.rule=Host:whoami.example.com"
+      - "traefik.backend=whoami"
+      - "traefik.frontend.entryPoints=http,https"
+      - "traefik.port=8000"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  #########
+  # MONIP #
+  #########
+
+  monip:
+    container_name: monip
+    image: joshdvir/ipd:latest
+    network_mode: "bridge"
+    restart: unless-stopped
+    labels:
+      - "traefik.frontend.rule=Host:monip.example.com"
+      - "traefik.backend=monip"
+      - "traefik.frontend.entryPoints=http,https"
+      - "traefik.port=8080"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  ##############
+  # ROCKETCHAT #
+  ##############
+
+  # https://rocket.chat/docs/installation/docker-containers/docker-compose/
+  # https://raw.githubusercontent.com/RocketChat/Rocket.Chat/develop/docker-compose.yml
+  
+  rocketchat:
+    container_name: rocketchat
+    image: rocketchat/rocket.chat:latest
+    restart: unless-stopped
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "$PWD/rocketchat/data/uploads:/app/uploads"
+      - "$PWD/rocketchat/scripts:/app/scripts"
+    environment:
+      - "PORT=3000"
+      - "ROOT_URL=http://rocketchat.example.com"
+      - "MONGO_URL=mongodb://mongo:27017/rocketchat"
+      - "MONGO_OPLOG_URL=mongodb://mongo:27017/local"
+    depends_on:
+      - mongo
+      - mongo-init-replica
+    # ports:
+    #   - 3000:3000
+    labels:
+      - "traefik.backend=rocketchat"
+      - "traefik.frontend.rule=Host:rocketchat.example.com"
+      - "traefik.frontend.entryPoints=http,https"
+      - "traefik.port=3000"
+
+  mongo:
+    container_name: mongo
+    image: mongo:3.7.2
+    restart: unless-stopped
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "$PWD/mongo/data/db:/data/db"
+      - "$PWD/mongo/data/backups:/dump"
+    command: mongod --smallfiles --oplogSize 128 --replSet rs0
+    labels:
+      - "traefik.enable=false"
+      
+  mongo-init-replica:
+    container_name: mongo-replica
+    image: mongo:3.7.2
+    command: 'mongo mongo/rocketchat --eval "rs.initiate({ _id: ''rs0'', members: [ { _id: 0, host: ''localhost:27017'' } ]})"'
+    depends_on:
+      - mongo
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+    
+  # hubot:
+  #   container_name: rocketchat-hubot
+  #   image: rocketchat/hubot-rocketchat:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     - "ROCKETCHAT_URL=rocketchat:3000"
+  #     - "ROCKETCHAT_ROOM=GENERAL"
+  #     - "ROCKETCHAT_USER=rocket.bot"
+  #     - "ROCKETCHAT_PASSWORD=rocket.bot_password"
+  #     - "BOT_NAME=rocket.bot"
+  # # you can add more scripts as you'd like here, they need to be installable by npm
+  #     - EXTERNAL_SCRIPTS=hubot-help,hubot-seen,hubot-links,hubot-diagnostics
+  #   depends_on:
+  #     - rocketchat
+  #   labels:
+  #     - "traefik.enable=false"
+  #     - "traefik.port=3001"
+  #   volumes:
+  #     - "/etc/localtime:/etc/localtime:ro"
+  #     - "/etc/timezone:/etc/timezone:ro"
+  #     - "$PWD/rocketchat/scripts:/home/hubot/scripts"
+  # # this is used to expose the hubot port for notifications on the host on port 3001, e.g. for hubot-jenkins-notifier
+  #   # ports:
+  #   #   - 3001:8080
+
+  ##########
+  # GITLAB #
+  ##########
+
+  #################
+  # ELASTIC STACK #
+  #################
+
+  # https://elk-docker.readthedocs.io/
+  # https://hub.docker.com/r/sebp/elk/
+  # https://github.com/spujadas/elk-docker/
+
+  # https://blog.zenika.com/2016/02/15/consolider-les-logs-docker-dans-un-elk/
+  # https://www.digitalocean.com/community/tutorials/how-to-install-elasticsearch-logstash-and-kibana-elk-stack-on-centos-7
+
+  # 1) Increase max_map_count (default: 65530)
+  #    sudo sysctl -w vm.max_map_count=262144
+  # 2) For logs directory, do
+  #    chmod -R 777 $PWD/elk/elasticsearch/logs/
+
+  elkx:
+    container_name: elkx
+    image: sebp/elkx:622
+    ports:
+      - "5601:5601"
+      - "9200:9200"
+      - "5044:5044"
+    labels:
+      - "traefik.frontend.rule=Host:elk.example.com"
+      - "traefik.backend=elkx"
+      - "traefik.frontend.entryPoints=http,https"
+      - "traefik.port=5601"
+    environment:
+      - "TZ=Europe/Paris"
+      # - "MAX_MAP_COUNT=262144"
+      # - "ELASTIC_BOOTSTRAP_PASSWORD=changeme"
+      - "ELASTICSEARCH_USER=elastic"
+      - "ELASTICSEARCH_PASSWORD=changeme"
+      - "LOGSTASH_USER=logstash_system"
+      - "LOGSTASH_PASSWORD=changeme"
+      - "KIBANA_USER=kibana"
+      - "KIBANA_PASSWORD=changeme"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      # - "/etc/pki/tls/:/etc/pki/tls/"
+      # - "$PWD/elkx/logstash/conf.d/:/etc/logstash/conf.d/"
+      # - "$PWD/elkx/logstash/logs/:/var/log/logstash/"
+      # - "$PWD/elkx/elasticsearch/etc/:/etc/elasticsearch/"
+      # - "$PWD/elkx/elasticsearch/data/:/var/lib/elasticsearch/"
+      # - "$PWD/elkx/elasticsearch/logs/:/var/log/elasticsearch/"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  ##############
+  # PROMETHEUS #
+  ##############
+
+  # https://www.brianchristner.io/how-to-monitor-traefik-reverse-proxy-with-prometheus/
+
