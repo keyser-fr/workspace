@@ -200,6 +200,12 @@ services:
   #    sudo sysctl -w vm.max_map_count=262144
   # 2) For logs directory, do
   #    chmod -R 777 $PWD/elk/elasticsearch/logs/
+  # 3) For elkx image
+  #    - https://github.com/spujadas/elkx-docker/issues/8
+  #    - do 'docker cp -a' command to copy volumes
+  #    - do 'chown -R 991:991' command for elasticsearch volumes
+  #    - do 'chown -R 992:992' command for logstash volumes
+  #    - do 'chown -R 993:993' command for kibana volumes
 
   elkx:
     container_name: elkx
@@ -216,22 +222,26 @@ services:
     environment:
       - "TZ=Europe/Paris"
       # - "MAX_MAP_COUNT=262144"
-      # - "ELASTIC_BOOTSTRAP_PASSWORD=changeme"
-      - "ELASTICSEARCH_USER=elastic"
-      - "ELASTICSEARCH_PASSWORD=changeme"
-      - "LOGSTASH_USER=logstash_system"
-      - "LOGSTASH_PASSWORD=changeme"
-      - "KIBANA_USER=kibana"
-      - "KIBANA_PASSWORD=changeme"
+      - "ELASTIC_BOOTSTRAP_PASSWORD=changeme"
+      # - "ELASTICSEARCH_USER=elastic"
+      # - "ELASTICSEARCH_PASSWORD=changeme"
+      # - "LOGSTASH_USER=logstash_system"
+      # - "LOGSTASH_PASSWORD=changeme"
+      # - "KIBANA_USER=kibana"
+      # - "KIBANA_PASSWORD=changeme"
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
       # - "/etc/pki/tls/:/etc/pki/tls/"
-      # - "$PWD/elkx/logstash/conf.d/:/etc/logstash/conf.d/"
-      # - "$PWD/elkx/logstash/logs/:/var/log/logstash/"
       # - "$PWD/elkx/elasticsearch/etc/:/etc/elasticsearch/"
       # - "$PWD/elkx/elasticsearch/data/:/var/lib/elasticsearch/"
-      # - "$PWD/elkx/elasticsearch/logs/:/var/log/elasticsearch/"
+      # - "$PWD/elkx/elasticsearch/log/:/var/log/elasticsearch/"
+      # - "$PWD/elkx/elasticsearch/opt/config/:/opt/elasticsearch/config/"
+      # - "$PWD/elkx/kibana/log/:/var/log/kibana/"
+      # - "$PWD/elkx/kibana/opt/config/:/opt/kibana/config/"
+      # - "$PWD/elkx/logstash/etc/:/etc/logstash/"
+      # - "$PWD/elkx/logstash/log/:/var/log/logstash/"
+      # - "$PWD/elkx/logstash/opt/config/:/opt/logstash/config/"
       - "/var/run/docker.sock:/var/run/docker.sock"
 
   ##############
