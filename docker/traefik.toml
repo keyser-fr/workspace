@@ -13,7 +13,7 @@ defaultEntryPoints = ["http", "https"]
 
   [entryPoints.dashboard]
   address = ":8090"
-     
+
   [entryPoints.api]
   address = ":8080"
   [entryPoints.api.auth]
@@ -25,7 +25,7 @@ defaultEntryPoints = ["http", "https"]
 
   [entryPoints.ping]
   address = ":8081"
-  
+
   [entryPoints.https]
   address = ":443"
   [entryPoints.https.tls]
@@ -43,7 +43,7 @@ dashboard = true
 email = "email@example.com"
 storage = "/etc/traefik/acme/acme.json"
 entryPoint = "https"
-acmeLogging = false
+acmeLogging = true # false
 onHostRule = false # For generete unique certificat for domain
 
 [acme.httpChallenge]
@@ -54,6 +54,7 @@ onHostRule = false # For generete unique certificat for domain
   # https://eu.api.ovh.com/console/
   # https://github.com/wheniwork/harpoon/blob/master/docker-compose.yml
   # https://www.bardina.net/traefik-gitlab-docker/
+  # https://www.g-rom.info/2017/06/creer-des-certificats-letsencrypt-avec-les-dns-de-ovh/
   provider = "ovh"
   delayBeforeCheck = 0
 
@@ -62,7 +63,7 @@ onHostRule = false # For generete unique certificat for domain
   sans = ["subdomain1.example.com",
        "subdomain2.example.com",
        ...,
-       "subdomainN.example.com",       
+       "subdomainN.example.com",
        ]
 
 # Accepted values, in order of severity: "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "PANIC"
