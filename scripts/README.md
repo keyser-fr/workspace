@@ -1,6 +1,7 @@
 # For backup on dedibackup
 Debut du crontab
-```{r, engine='bash', count_lines}```
+
+```{r, engine='bash', count_lines}
 # Edit this file to introduce tasks to be run by cron.
 #
 # Each task to run has to be defined through a single line
@@ -29,7 +30,7 @@ MAILTO=""
 
 Dans la crontab du user ajouter les lignes suivantes :
 
-```{r, engine='bash', count_lines}```
+```{r, engine='bash', count_lines}
 # Backup sur dedibackup
 0 22 * * * lftp ftp://auto:@dedibackup-dc3.online.net -e "mirror -e -R ~/dedibackup/ /dedibackup; quit"
 ```
@@ -37,7 +38,7 @@ Dans la crontab du user ajouter les lignes suivantes :
 # sql_dump usage
 Dans la crontab du user ajouter les lignes suivantes :
 
-```{r, engine='bash', count_lines}```
+```{r, engine='bash', count_lines}
 # Backup databases on sql.free.fr
 0 1 * * * DATABASE='database_name1' PASSWORD='password1' ${HOME}/bin/sql_dump.sh
 10 1 * * * DATABASE='database_name2' PASSWORD='password2' ${HOME}/bin/sql_dump.sh
