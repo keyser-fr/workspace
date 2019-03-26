@@ -1,0 +1,382 @@
+#!/usr/bin/env python3
+
+""" dockps : a pretty docker ps """
+
+import os
+from pwd import getpwuid
+from argparse import ArgumentParser
+from configparser import ConfigParser
+from shutil import which
+from subprocess import Popen, PIPE, STDOUT, CalledProcessError
+import json
+import urllib.request
+from urllib.error import URLError, HTTPError
+
+# ----------------------------------------------------------------------------
+# Defaults
+# ----------------------------------------------------------------------------
+
+INI_FILE = '.swarm.ini'
+DOCKER_FILE = '.docker/config.json'
+
+DRED = "0;31"
+LRED = "1;31"
+DGREEN = "0;32"
+LGREEN = "1;32"
+DBLUE = "0;34"
+LBLUE = "1;34"
+DCYAN = "0;36"
+LCYAN = "1;36"
+DYELLOW = "0;33"
+LYELLOW = "1;33"
+DMAGENTA = "0;35"
+LMAGENTA = "1;35"
+DGRAY = "0;37"
+LGRAY = "1;37"
+
+
+def scolor(color, msg):
+    '''
+    Print in color
+    '''
+    return '\033[{0}m{1}\033[0m'.format(color, msg)
+
+
+def load_ini_file(ini_file):
+    '''
+    Load ini file settings
+    '''
+    username = getpwuid(os.getuid()).pw_name
+    ini_file = '{0}/{1}'.format(os.path.expanduser("~"), ini_file)
+    if not os.path.isfile(ini_file):
+        print("ERROR: Missing ini file '{0}', creating one...".
+              format(ini_file))
+        config = ConfigParser(allow_no_value=True)
+        config.add_section('default_settings')
+        config.set('default_settings', 'utokentome_user', username)
+        config.set('default_settings', 'tenant', 'shm')
+        with open(ini_file, 'w') as filep:
+            config.write(filep)
+        print('-----')
+        with open(ini_file, 'r') as filep:
+            print(filep.read())
+        print('-----')
+        exit(1)
+    else:
+        config = ConfigParser()
+        config.read(ini_file)
+        ini_user = config.get('default_settings', 'utokentome_user')
+        ini_tenant = config.get('default_settings', 'tenant')
+    return (ini_user, ini_tenant)
+
+
+def run_utokentome(user):
+    '''
+    Run utokentome
+    '''
+    utokentome = which("utokentome")
+    if utokentome is None:
+        print("ERROR: You need to install the 'utokentome' tool")
+        print("       See the wiki : http://u.prod.oih.p.fti.net/yxQB-g6C")
+        exit(2)
+    os.system('{0} -u {1}>/dev/null'.format(utokentome, user))
+
+
+def get_stacks_from_quotas(docker_file, dkr_host, dkr_tenant):
+    '''
+    Get stack(s) from quotas
+    '''
+    docker_file = '{0}/{1}'.format(os.path.expanduser("~"), docker_file)
+    with open(docker_file) as json_data:
+        data = json.load(json_data)
+        token = data['HttpHeaders']['Authorization']
+        quota_url = "http://{0}/swarm_controller/quotas".format(dkr_host)
+        req = urllib.request.Request(quota_url)
+    req.add_header('Authorization', token)
+    try:
+        with urllib.request.urlopen(req) as urlp:
+            quotas = json.loads(urlp.read().decode('utf-8'))
+    except (URLError, HTTPError) as excp:
+        print("\nFailed to get stacks from quotas : {0}\n".format(excp))
+        exit(3)
+    dkr_stacks = []
+    for dkr_stack in sorted(quotas):
+        if quotas[dkr_stack]['Tenant'] == dkr_tenant:
+            dkr_stacks.append(dkr_stack)
+    if len(dkr_stacks):
+        return dkr_stacks
+    else:
+        return ['none']
+
+
+def docker_ps(dkr_stack, dkr_host):
+    '''
+    get docker ps containers info
+    '''
+    ps_format = '{{.ID}}|{{.Names}}|{{.Image}}|{{.Status}}|{{.RunningFor}}|'\
+                '{{.Networks}}|{{.Ports}}|{{.Mounts}}'
+    cmd = "docker ps -a --no-trunc --format '{0}'".format(ps_format)
+    try:
+        if dkr_stack != 'local':
+            cmd = '{0} --filter label=com.<domain>.stack.name={1}'.\
+                  format(cmd, dkr_stack)
+        proc = Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT,
+                     universal_newlines=True, close_fds=True)
+        output = proc.stdout.readlines()
+        proc.communicate()
+        containers = {}
+        containers[dkr_stack] = {}
+        if len(output) == 0:
+            containers[dkr_stack]['none'] = {}
+            containers[dkr_stack]['none'][0] = {}
+            containers[dkr_stack]['none'][0]['      -     '] = \
+                {'server': '  - ',
+                 'image': '',
+                 'status': '-',
+                 'running': '-',
+                 'networks': '  -  ',
+                 'ports': '',
+                 'mounts': ''}
+            return containers
+        for line in output:
+            if line.find('error during connect') == 0:
+                print('\nError: cannot connect to docker ({0})\n'.
+                      format(dkr_host))
+                exit(4)
+            container = line.rstrip('\n').split('|')
+            c_id = container[0][0:12]
+            c_name = container[1]
+            if '/' in c_name:
+                c_server, c_name = c_name.split('/')
+            else:
+                c_server = 'localhost'
+            try:
+                c_name, c_instance_num = c_name.rsplit('_', 1)
+            except ValueError:
+                c_instance_num = '0'
+            if not c_instance_num.isdigit():
+                c_name = '{0}_{1}'.format(c_name, c_instance_num)
+                c_instance_num = '0'
+            c_instance_num = int(c_instance_num)
+            c_image = container[2]
+            c_status = container[3]
+            c_running = container[4]
+            c_networks = container[5]
+            c_ports = container[6]
+            if c_ports == '':
+                c_ports = 'NONE'
+            c_mounts = container[7]
+            if c_mounts == '':
+                c_mounts = 'NONE'
+            if c_name not in containers:
+                containers[dkr_stack][c_name] = {}
+            if c_instance_num not in containers[dkr_stack][c_name]:
+                containers[dkr_stack][c_name][c_instance_num] = {}
+            containers[dkr_stack][c_name][c_instance_num][c_id] = \
+                {'server': c_server,
+                 'image': c_image,
+                 'status': c_status,
+                 'running': c_running,
+                 'networks': c_networks,
+                 'ports': c_ports,
+                 'mounts': c_mounts}
+    except CalledProcessError as excp:
+        print("{0} execution returned the following error ({1}): ".
+              format(cmd, excp))
+        for line in output:
+            print(line.rstrip('\n'))
+        exit(5)
+    return containers
+
+
+def display_containers(containers):
+    '''
+    Display containers
+    '''
+    if 'local' in containers and 'none' in containers['local']:
+        print(" No running container on 'localhost'")
+        return
+    # Find max lengths
+    maxlen_stack = 5
+    maxlen_name = 9
+    maxlen_fullstatus = 6
+    for dkr_stack in sorted(containers):
+        if dkr_stack != 'local':
+            maxlen = len(dkr_stack)
+            if maxlen > maxlen_stack:
+                maxlen_stack = maxlen
+        for container in containers[dkr_stack]:
+            nb_instances = len(containers[dkr_stack][container])
+            for instance_num in containers[dkr_stack][container]:
+                for c_id in containers[dkr_stack][container][instance_num]:
+                    instance = \
+                        containers[dkr_stack][container][instance_num][c_id]
+                    maxlen = len(container)
+                    if nb_instances > 1:
+                        maxlen = maxlen + 5
+                    if maxlen > maxlen_name:
+                        maxlen_name = maxlen
+                    maxlen = (len(instance['status']) +
+                              len(instance['running']) + 3)
+                    if maxlen > maxlen_fullstatus:
+                        maxlen_fullstatus = maxlen
+    if not args.long:
+        if 'local' not in containers.keys():
+            if args.vxlan:
+                sep = " {0}-+-{1}-+-{2}-+-{3}-+-{4}-+-----".\
+                      format("-" * maxlen_stack, "-" * 5, "-" * 12,
+                             "-" * maxlen_name, "-" * maxlen_fullstatus)
+                print(sep)
+                print(" {0} | {1:^5} | {2:^12} | {3} | {4} | DKR".
+                      format('STACK'.center(maxlen_stack), 'VXLAN', 'ID',
+                             'CONTAINER'.center(maxlen_name),
+                             'STATUS'.center(maxlen_fullstatus)))
+                print(sep)
+            else:
+                sep = " {0}-+-{1}-+-{2}-+-{3}-+-----".\
+                      format("-" * maxlen_stack, "-" * 12, "-" * maxlen_name,
+                             "-" * maxlen_fullstatus)
+                print(sep)
+                print(" {0} | {1:^12} | {2} | {3} | DKR".
+                      format('STACK'.center(maxlen_stack), 'ID',
+                             'CONTAINER'.center(maxlen_name),
+                             'STATUS'.center(maxlen_fullstatus)))
+                print(sep)
+        else:
+            sep = " {0}-+-{1}-+-{2}".\
+                  format("-" * 12, "-" * maxlen_name, "-" * maxlen_fullstatus)
+            print(sep)
+            print(" {0:^12} | {1} | {2}".
+                  format('ID', 'CONTAINER'.center(maxlen_name),
+                         'STATUS'.center(maxlen_fullstatus)))
+            print(sep)
+    # Display ps info
+    for dkr_stack in sorted(containers):
+        if args.long:
+            if dkr_stack != 'local':
+                print(scolor(LMAGENTA,
+                             " {0}\n {1}\n {2}\n".format("-" * 78, dkr_stack,
+                                                         "-" * 78)))
+        for container in sorted(containers[dkr_stack]):
+            nb_instances = len(containers[dkr_stack][container])
+            for instance_num in sorted(containers[dkr_stack][container]):
+                for c_id in containers[dkr_stack][container][instance_num]:
+                    instance = \
+                        containers[dkr_stack][container][instance_num][c_id]
+                    if dkr_stack != 'local':
+                        p_stack = scolor(LMAGENTA,
+                                         dkr_stack.ljust(maxlen_stack))
+                    p_id = c_id
+                    if nb_instances > 1:
+                        p_container = container.ljust(maxlen_name - 5)
+                    else:
+                        p_container = container.ljust(maxlen_name)
+                    if container.find('_') > 0:
+                        group, service = p_container.split('_', 1)
+                        p_container = "{0}_{1}".\
+                                      format(scolor(DBLUE, group),
+                                             scolor(LBLUE, service))
+                    elif container == 'none':
+                        p_container = scolor(LYELLOW, p_container)
+                    else:
+                        p_container = scolor(LBLUE, p_container)
+                    if nb_instances > 1:
+                        p_container = '{0}  {1:3d}'.format(p_container,
+                                                           instance_num)
+                    fullstatus = '{0} ({1})'.format(instance['status'],
+                                                    instance['running'])
+                    p_fullstatus = fullstatus.ljust(maxlen_fullstatus)
+                    if 'Up ' in p_fullstatus:
+                        p_fullstatus = scolor(LGREEN, p_fullstatus)
+                    elif 'Exited ' in p_fullstatus:
+                        p_fullstatus = scolor(LRED, p_fullstatus)
+                    else:
+                        p_fullstatus = scolor(LYELLOW, p_fullstatus)
+                    p_server = instance['server']
+                    p_node = p_server.split('.')[0][-3:]
+                    p_networks = scolor(LCYAN, instance['networks'])
+                    if container == 'none':
+                        p_vxlan = instance['networks']
+                    else:
+                        p_vxlan = scolor(LCYAN, instance['networks'][6:11])
+                    p_ports = instance['ports']
+                    p_mounts = instance['mounts']
+                    p_image = instance['image']
+                    if not args.long:
+                        if dkr_stack == 'local':
+                            print(' {0} | {1} | {2}'.
+                                  format(p_id, p_container, p_fullstatus))
+                        else:
+                            if args.vxlan:
+                                print(' {0} | {1} | {2} | {3} | {4} | {5}'.
+                                      format(p_stack, p_vxlan, p_id,
+                                             p_container, p_fullstatus,
+                                             p_node))
+                            else:
+                                print(' {0} | {1} | {2} | {3} | {4}'.
+                                      format(p_stack, p_id, p_container,
+                                             p_fullstatus, p_node))
+                    else:
+                        tab = ''.ljust(12)
+                        print(' {0} | {1}'.format(p_id, p_container))
+                        print(' {0} |  status:  {1}'.format(tab, p_fullstatus))
+                        print(' {0} |    host:  {1}'.format(tab, p_server))
+                        if dkr_stack != 'local':
+                            print(' {0} |   stack:  {1}'.format(tab, p_stack))
+                        print(' {0} | network:  {1}'.format(tab, p_networks))
+                        print(' {0} |   ports:  {1}'.format(tab, p_ports))
+                        print(' {0} |  mounts:  {1}'.format(tab, p_mounts))
+                        print(' {0} |   image:  {1}'.format(tab, p_image))
+                        print('')
+        if not args.long:
+            if dkr_stack != 'local':
+                if args.vxlan:
+                    print(" {0}-+-{1}-+-{2}-+-{3}-+-{4}-+-----".
+                          format("-" * maxlen_stack, "-" * 5, "-" * 12,
+                                 "-" * maxlen_name, "-" * maxlen_fullstatus))
+                else:
+                    print(" {0}-+-{1}-+-{2}-+-{3}-+-----".
+                          format("-" * maxlen_stack, "-" * 12,
+                                 "-" * maxlen_name, "-" * maxlen_fullstatus))
+            else:
+                print(" {0}-+-{1}-+-{2}".
+                      format("-" * 12, "-" * maxlen_name,
+                             "-" * maxlen_fullstatus))
+
+# Parse args
+parser = ArgumentParser(description='Docker ps beautifier.')
+parser.add_argument('-t', '--tenant', type=str, help='set the tenant')
+parser.add_argument('-s', '--stack', dest='stack', default=None,
+                    action='store', type=str, help='set the stack')
+parser.add_argument('-x', '--vxlan', action='store_true',
+                    help='add a vxlan column')
+parser.add_argument('-l', '--long', action='store_true',
+                    help='more information')
+args = parser.parse_args()
+
+# Load settings
+utokentome_user, tenant = load_ini_file(INI_FILE)
+if args.tenant:
+    tenant = args.tenant
+
+# If on swarm, run utokentome and get available stacks
+if 'DOCKER_HOST' in os.environ:
+    docker_host = os.environ['DOCKER_HOST']
+    run_utokentome(utokentome_user)
+    if args.stack is not None:
+        available_stacks = [args.stack]
+    else:
+        available_stacks = get_stacks_from_quotas(DOCKER_FILE, docker_host,
+                                                  tenant)
+else:
+    docker_host = "local"
+    available_stacks = ['local']
+
+# Get containers info
+all_containers = {}
+for stack in available_stacks:
+    all_containers.update(docker_ps(stack, docker_host))
+
+# Display containers
+print()
+display_containers(all_containers)
