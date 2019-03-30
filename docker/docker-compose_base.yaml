@@ -1,0 +1,64 @@
+version: '3'
+
+# Networks configuration
+# networks:
+#   mongodb:
+#     driver: bridge
+    
+# Services configuration
+services:
+
+  ###########
+  # TRAEFIK #
+  ###########
+
+  # https://www.digitalocean.com/community/tutorials/how-to-use-traefik-as-a-reverse-proxy-for-docker-containers-on-ubuntu-16-04
+
+  traefik:
+    container_name: traefik
+    image: traefik:latest
+    network_mode: "host"
+    # restart: always
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "$PWD/traefik.toml:/etc/traefik/traefik.toml"
+      - "$PWD/toml/:/etc/traefik/toml/"
+      - "$PWD/logs/:/etc/traefik/logs/"
+      - "$PWD/acme/:/etc/traefik/acme/"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    labels:
+      - "traefik.frontend.rule=Host:traefik.scriptshell.net"
+      - "traefik.backend=traefik"
+      - "traefik.frontend.entryPoints=http,https"
+      - "traefik.port=8080"
+    environment:
+      - "TZ=Europe/Paris"
+      - "OVH_ENDPOINT=ovh-eu"
+      - "OVH_APPLICATION_KEY=qIMKRPZdY7hiAsjt"
+      - "OVH_APPLICATION_SECRET=98qDHBUYLSWhaQ2aSVAa3lV4U7sc4GxA"
+      - "OVH_CONSUMER_KEY=k6nxH0620hnrq6yTnavnRDsNXHUhLiHr"
+
+  #############
+  # PORTAINER #
+  #############
+
+  portainer:
+    container_name: portainer
+    image: portainer/portainer:latest
+    network_mode: "bridge"
+    restart: unless-stopped
+    labels:
+      - "traefik.frontend.rule=Host:portainer.scriptshell.net"
+      - "traefik.backend=portainer"
+      - "traefik.frontend.entryPoints=http,https"
+      - "traefik.port=9000"
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "$PWD/portainer:/data"
+      - "/var/run/docker.sock:/var/run/docker.sock"
