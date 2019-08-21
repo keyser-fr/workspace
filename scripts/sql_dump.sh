@@ -1,5 +1,7 @@
 #! /bin/bash
 
+NUMBER_BACKUP=10;
+
 #set -x # debug mode => equivalent for bash -x command
 
 if [[ -z ${DATABASE} || -z ${PASSWORD} ]]; then
@@ -31,7 +33,7 @@ if [ $? -eq 0 ]; then
 	mv backup.php ${backup_dir}/backup_mysql_${filename}
 	echo "Saved in ${backup_dir}/backup_mysql_${filename}"
     fi
-    ls -1 ${backup_dir}/backup_mysql_*.gz | sort -u | head -n-10 | xargs -r rm -v
+    ls -1 ${backup_dir}/backup_mysql_*.gz | sort -u | head -n-${NUMBER_BACKUP} | xargs -r rm -v
 else
     echo -n "Error : " >&2
     grep "HTTP/1.1 " curl.headers >&2
