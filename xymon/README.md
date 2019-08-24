@@ -31,3 +31,9 @@ First, change the ~/server/etc/hosts.cfg file so it has the new name. Then to mo
 ```bash
 ~/server/bin/xymon 127.0.0.1 "rename OLDHOSTNAME NEWHOSTNAME"
 ```
+
+* How to display red tests [MAN](http://xymon.sourceforge.net/xymon/help/manpages/man1/xymon.1.html)
+
+```bash
+/usr/lib/xymon/server/bin/xymon 127.0.0.1 "xymondboard color=red fields=hostname,testname"
+```
