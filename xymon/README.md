@@ -1,10 +1,10 @@
 # Xymon
 
-Xymon works
+* [Xymon configuration](http://xymon.sourceforge.net/xymon/help/xymon-config.html)
+* [Xymon Tips & Tricks](http://xymon.sourceforge.net/xymon/help/xymon-tips.html)
+* [Xymon man page](http://xymon.sourceforge.net/xymon/help/manpages/man1/xymon.1.html)
 
-[Source](http://xymon.sourceforge.net/xymon/help/xymon-tips.html)
-
-* I accidentally added an 'ftp' check. Now I cannot get it off the webpage!
+# I accidentally added an 'ftp' check. Now I cannot get it off the webpage!
 
 Use the command
 
@@ -14,7 +14,7 @@ Use the command
 
 to permanenly remove all traces of a test. Note that you need the quotes around the "drop HOSTNAME ftp".
 
-* So how do I get rid of an entire host in Xymon?
+# So how do I get rid of an entire host in Xymon?
 
 First, remove the host from the ~/server/etc/hosts.cfg file. Then use the command
 
@@ -24,7 +24,7 @@ First, remove the host from the ~/server/etc/hosts.cfg file. Then use the comman
 
 to permanenly remove all traces of a host. Note that you need the quotes around the "drop HOSTNAME".
 
-* How do I rename a host in the Xymon display?
+# How do I rename a host in the Xymon display?
 
 First, change the ~/server/etc/hosts.cfg file so it has the new name. Then to move your historical data over to the new name, run
 
@@ -32,7 +32,7 @@ First, change the ~/server/etc/hosts.cfg file so it has the new name. Then to mo
 ~/server/bin/xymon 127.0.0.1 "rename OLDHOSTNAME NEWHOSTNAME"
 ```
 
-* How to display red tests [[Xymon man page](http://xymon.sourceforge.net/xymon/help/manpages/man1/xymon.1.html)]
+# How to display red tests
 
 ```bash
 /usr/lib/xymon/server/bin/xymon 127.0.0.1 "xymondboard color=red fields=hostname,testname"
