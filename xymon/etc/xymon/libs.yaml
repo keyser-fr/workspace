@@ -1,0 +1,25 @@
+# generic config file for the libs test
+# specify local additions in /etc/xymon/libs.local.yaml
+---
+whitelist:
+  *:
+    - '^/proc/'
+    - '^/run/'
+    - '^/tmp/'
+    - '^/var/tmp/'
+    - '^/var/log/'
+    - '^/var/run/'
+    - '^/SYS'
+    - '^/drm'
+    - '^/dev/zero'
+    - '^/dev/shm'
+    - '^/dev/pts'
+    - '^/var/lib/lightdm/\.speech-dispatcher/'
+    - '\.cache'
+    - '/\.config/'
+    - '/\.local/share/gvfs-metadata/'
+    - 'dovecot(\.index|-uidlist)'
+  /usr/sbin/memlockd:
+    - '.*'
+  /usr/sbin/mysqld: # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=873838
+    - '^/\[aio\]$'
