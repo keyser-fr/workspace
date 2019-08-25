@@ -1,4 +1,5 @@
-#!§bin/sh
+#!/bin/sh
 
-apt-get autoremove --purge
+apt autoremove --purge
 exit 0
+
