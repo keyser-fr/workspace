@@ -1,0 +1,23 @@
+version: '3'
+
+# Services configuration
+services:
+
+  ##########
+  # WHOAMI #
+  ##########
+
+  # whoami:
+  #   container_name: whoami
+  #   image: jwilder/whoami:latest
+  #   network_mode: "bridge"
+  #   restart: unless-stopped
+  #   labels:
+  #     - "traefik.frontend.rule=Host:whoami.scriptshell.net"
+  #     - "traefik.backend=whoami"
+  #     - "traefik.frontend.entryPoints=http,https"
+  #     - "traefik.port=8000"
+  #   volumes:
+  #     - "/etc/localtime:/etc/localtime:ro"
+  #     - "/etc/timezone:/etc/timezone:ro"
+  #     - "/var/run/docker.sock:/var/run/docker.sock"

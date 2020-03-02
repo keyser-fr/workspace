@@ -1,0 +1,84 @@
+version: '3'
+
+# Services configuration
+services:
+
+  ##############
+  # ROCKETCHAT #
+  ##############
+
+  # https://rocket.chat/docs/installation/docker-containers/docker-compose/
+  # https://raw.githubusercontent.com/RocketChat/Rocket.Chat/develop/docker-compose.yml
+  
+  rocketchat:
+    container_name: rocketchat
+    image: rocketchat/rocket.chat:latest
+    restart: unless-stopped
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "$PWD/rocketchat/data/uploads:/app/uploads"
+      - "$PWD/rocketchat/scripts:/app/scripts"
+    environment:
+      - "PORT=3000"
+      - "ROOT_URL=http://rocketchat.scriptshell.net"
+      - "MONGO_URL=mongodb://mongo:27017/rocketchat"
+      - "MONGO_OPLOG_URL=mongodb://mongo:27017/local"
+    depends_on:
+      - mongo
+      - mongo-init-replica
+    # ports:
+    #   - 3000:3000
+    labels:
+      - "traefik.backend=rocketchat"
+      - "traefik.frontend.rule=Host:rocketchat.scriptshell.net"
+      - "traefik.frontend.entryPoints=http,https"
+      - "traefik.port=3000"
+
+  mongo:
+    container_name: mongo
+    image: mongo:3.7.2
+    restart: unless-stopped
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "$PWD/mongo/data/db:/data/db"
+      - "$PWD/mongo/data/backups:/dump"
+    command: mongod --smallfiles --oplogSize 128 --replSet rs0
+    labels:
+      - "traefik.enable=false"
+      
+  mongo-init-replica:
+    container_name: mongo-replica
+    image: mongo:3.7.2
+    command: 'mongo mongo/rocketchat --eval "rs.initiate({ _id: ''rs0'', members: [ { _id: 0, host: ''localhost:27017'' } ]})"'
+    depends_on:
+      - mongo
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+    
+  # hubot:
+  #   container_name: rocketchat-hubot
+  #   image: rocketchat/hubot-rocketchat:latest
+  #   restart: unless-stopped
+  #   environment:
+  #     - "ROCKETCHAT_URL=rocketchat:3000"
+  #     - "ROCKETCHAT_ROOM=GENERAL"
+  #     - "ROCKETCHAT_USER=rocket.bot"
+  #     - "ROCKETCHAT_PASSWORD=rocket.bot_password"
+  #     - "BOT_NAME=rocket.bot"
+  # # you can add more scripts as you'd like here, they need to be installable by npm
+  #     - EXTERNAL_SCRIPTS=hubot-help,hubot-seen,hubot-links,hubot-diagnostics
+  #   depends_on:
+  #     - rocketchat
+  #   labels:
+  #     - "traefik.enable=false"
+  #     - "traefik.port=3001"
+  #   volumes:
+  #     - "/etc/localtime:/etc/localtime:ro"
+  #     - "/etc/timezone:/etc/timezone:ro"
+  #     - "$PWD/rocketchat/scripts:/home/hubot/scripts"
+  # # this is used to expose the hubot port for notifications on the host on port 3001, e.g. for hubot-jenkins-notifier
+  #   # ports:
+  #   #   - 3001:8080

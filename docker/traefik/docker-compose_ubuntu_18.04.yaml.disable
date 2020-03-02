@@ -1,0 +1,23 @@
+version: '3.4'
+services:
+  ubuntu:
+    container_name: ubuntu_18.04
+    image: ubuntu:18.04
+    # restart: always
+    environment:
+      USER: ${USER}
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/etc/group:/etc/group:ro"
+      - "/etc/passwd:/etc/passwd:ro"
+      - "/etc/shadow:/etc/shadow:ro"
+      - "$PWD/ubuntu/home/${USER}:/home/${USER}"
+    # ports:
+    #   - '2222:22'
+    # command: >
+    #   bash -c "useradd --home /home/$${USER}/ --create-home --shell /bin/bash -g users $${USER}
+    #   && chown -R $${USER}:users /home/$${USER}"
+    stdin_open: true
+    tty: true

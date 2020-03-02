@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 
 ACTION=0
-COMPONENTS=0
+COMPONENT=0
 DEBUG=0
 DRY_RUN=0
 
+function get_components_list {
+    echo $(ls -1 docker-compose_*.yaml | sed 's/docker-compose_//;s/.yaml//')
+}
+
 function usage {
     printf "\n"
-    printf "Usage: $0 --action <start|stop> --components <all|base|addons> [OPTIONS]\n\n"
+    printf "Usage: $0 --action <start|stop> --component <all|$(get_components_list|sed 's/ /|/g')> [OPTIONS]\n\n"
     printf "Options:\n"
     printf "\t%-20s %-50s\n" "--action" "Select action <start|stop>"
-    printf "\t%-20s %-50s\n" "--components" "Select components <all|base|addons>"
+    printf "\t%-20s %-50s\n" "--component" "Select component <all|$(get_components_list|sed 's/ /|/g')>"
     printf "\t%-20s %-50s\n" "--debug" "Debug mode"
     printf "\t%-20s %-50s\n" "--dry-run" "Dry-run mode"
     printf "\t%-20s %-50s\n" "-h, --help" "Show help"
@@ -18,12 +22,13 @@ function usage {
 }
 
 if [[ -z $1 ]]; then
+    get_components_list
     usage
     exit 1
 fi
 
 # read the options
-GET_OPTS=`getopt -o hv --long action:,components:,debug,dry-run,help,version -n "$0" -- "$@"`
+GET_OPTS=`getopt -o hv --long action:,component:,debug,dry-run,help,version -n "$0" -- "$@"`
 eval set -- "${GET_OPTS}"
 
 # extract options and their arguments into variables.
@@ -40,8 +45,8 @@ while true; do
 		    shift 2;;
 		*) echo "[ERROR] Choose action <start|stop>"; exit 1;;
 	    esac;;
-	--components)
-	    COMPONENTS=1
+	--component)
+	    COMPONENT=1
 	    case "$2" in
 		all)
 		    COMPOSE_COMPONENTS="-f docker-compose_base.yaml -f docker-compose_addons.yaml"
@@ -52,7 +57,11 @@ while true; do
 		addons)
 		    COMPOSE_COMPONENTS="-f docker-compose_addons.yaml"
 		    shift 2;;
-		*) echo "[ERROR] Choose components <all|base|addons>"; exit 1;;
+		teamspeak)
+		    COMPOSE_COMPONENTS="-f docker-compose_teamspeak.yaml"
+		    shift 2;;
+		*)
+		    echo "[ERROR] Choose components <all|$(get_components_list|sed 's/ /|/g')>"; exit 1;;
 	    esac;;
 	--debug)
 	    DEBUG=1;
@@ -71,7 +80,8 @@ while true; do
     esac
 done
 
-if [[ ${ACTION} == 0 || ${COMPONENTS} == 0 ]]; then
+if [[ ${ACTION} == 0 || ${COMPONENT} == 0 ]]; then
+    get_components_list
     usage
     exit 1
 else
