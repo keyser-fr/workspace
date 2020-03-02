@@ -1,16 +1,16 @@
   [backends]
-  
+
     [backends.backend-xymon]
       [backends.backend-xymon.servers.server-xymon]
          url = "http://sd-157459.dedibox.fr/"
 
   [frontends]
-  
+
     [frontends.frontend-xymon]
       entrypoints = ["http", "https"]
       backend = "backend-xymon"
       passHostHeader = true
-      whitelistSourceRange = ["127.0.0.1/32", "91.165.204.217/32", "87.90.30.24/32", "193.252.149.197/32"]
+      whitelistSourceRange = ["127.0.0.1/32", "IP1/32", "IP2/32", "...", "IPN/32"]
 
     [frontends.frontend-xymon.routes]
       [frontends.frontend-xymon.routes.route-xymon]
