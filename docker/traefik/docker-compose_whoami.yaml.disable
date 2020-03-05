@@ -13,7 +13,7 @@ services:
   #   network_mode: "bridge"
   #   restart: unless-stopped
   #   labels:
-  #     - "traefik.frontend.rule=Host:whoami.scriptshell.net"
+  #     - "traefik.frontend.rule=Host:whoami.example.com"
   #     - "traefik.backend=whoami"
   #     - "traefik.frontend.entryPoints=http,https"
   #     - "traefik.port=8000"

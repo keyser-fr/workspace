@@ -21,7 +21,7 @@ services:
       - "$PWD/rocketchat/scripts:/app/scripts"
     environment:
       - "PORT=3000"
-      - "ROOT_URL=http://rocketchat.scriptshell.net"
+      - "ROOT_URL=http://rocketchat.example.com"
       - "MONGO_URL=mongodb://mongo:27017/rocketchat"
       - "MONGO_OPLOG_URL=mongodb://mongo:27017/local"
     depends_on:
@@ -31,7 +31,7 @@ services:
     #   - 3000:3000
     labels:
       - "traefik.backend=rocketchat"
-      - "traefik.frontend.rule=Host:rocketchat.scriptshell.net"
+      - "traefik.frontend.rule=Host:rocketchat.example.com"
       - "traefik.frontend.entryPoints=http,https"
       - "traefik.port=3000"
 

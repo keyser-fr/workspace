@@ -13,7 +13,7 @@ services:
     network_mode: "bridge"
     restart: unless-stopped
     labels:
-      - "traefik.frontend.rule=Host:monip.scriptshell.net"
+      - "traefik.frontend.rule=Host:monip.example.com"
       - "traefik.backend=monip"
       - "traefik.frontend.entryPoints=http,https"
       - "traefik.port=8080"

@@ -13,7 +13,7 @@ services:
   #   network_mode: "bridge"
   #   restart: unless-stopped
   #   labels:
-  #     - "traefik.frontend.rule=Host:whoami.scriptshell.net"
+  #     - "traefik.frontend.rule=Host:whoami.example.com"
   #     - "traefik.backend=whoami"
   #     - "traefik.frontend.entryPoints=http,https"
   #     - "traefik.port=8000"
@@ -32,7 +32,7 @@ services:
     network_mode: "bridge"
     restart: unless-stopped
     labels:
-      - "traefik.frontend.rule=Host:monip.scriptshell.net"
+      - "traefik.frontend.rule=Host:monip.example.com"
       - "traefik.backend=monip"
       - "traefik.frontend.entryPoints=http,https"
       - "traefik.port=8080"
@@ -59,7 +59,7 @@ services:
       - "$PWD/rocketchat/scripts:/app/scripts"
     environment:
       - "PORT=3000"
-      - "ROOT_URL=http://rocketchat.scriptshell.net"
+      - "ROOT_URL=http://rocketchat.example.com"
       - "MONGO_URL=mongodb://mongo:27017/rocketchat"
       - "MONGO_OPLOG_URL=mongodb://mongo:27017/local"
     depends_on:
@@ -69,7 +69,7 @@ services:
     #   - 3000:3000
     labels:
       - "traefik.backend=rocketchat"
-      - "traefik.frontend.rule=Host:rocketchat.scriptshell.net"
+      - "traefik.frontend.rule=Host:rocketchat.example.com"
       - "traefik.frontend.entryPoints=http,https"
       - "traefik.port=3000"
 
@@ -151,7 +151,7 @@ services:
   #     - "9200:9200"
   #     - "5044:5044"
   #   labels:
-  #     - "traefik.frontend.rule=Host:elk.scriptshell.net"
+  #     - "traefik.frontend.rule=Host:elk.example.com"
   #     - "traefik.backend=elkx"
   #     - "traefik.frontend.entryPoints=http,https"
   #     - "traefik.port=5601"

@@ -14,4 +14,4 @@
 
     [frontends.frontend-xymon.routes]
       [frontends.frontend-xymon.routes.route-xymon]
-        rule = "Host:xymon.scriptshell.net"
+        rule = "Host:xymon.example.com"

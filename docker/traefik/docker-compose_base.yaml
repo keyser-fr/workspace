@@ -32,7 +32,7 @@ services:
       - "$PWD/acme/:/etc/traefik/acme/"
       - "/var/run/docker.sock:/var/run/docker.sock"
     labels:
-      - "traefik.frontend.rule=Host:traefik.scriptshell.net"
+      - "traefik.frontend.rule=Host:traefik.example.com"
       - "traefik.backend=traefik"
       - "traefik.frontend.entryPoints=http,https"
       - "traefik.port=8080"
@@ -53,7 +53,7 @@ services:
     network_mode: "bridge"
     restart: unless-stopped
     labels:
-      - "traefik.frontend.rule=Host:portainer.scriptshell.net"
+      - "traefik.frontend.rule=Host:portainer.example.com"
       - "traefik.backend=portainer"
       - "traefik.frontend.entryPoints=http,https"
       - "traefik.port=9000"
