@@ -1,0 +1,36 @@
+version: '3'
+
+# Services configuration
+services:
+
+  #############
+  # WIREGUARD #
+  #############
+
+  # wireguard:
+  #   container_name: wireguard
+  #   image: linuxserver/wireguard
+  #   cap_add:
+  #     - NET_ADMIN
+  #     - SYS_MODULE
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=100
+  #     - TZ=Europe/Paris
+  #     - SERVERURL=wireguard.scriptshell.net #optional
+  #     - SERVERPORT=51820 #optional
+  #     - PEERS=1 #optional
+  #     - PEERDNS=auto #optional
+  #     - INTERNAL_SUBNET=10.13.13.0 #optional
+  #   volumes:
+  #     - "/etc/localtime:/etc/localtime:ro"
+  #     - "/etc/timezone:/etc/timezone:ro"
+  #     - "/var/run/docker.sock:/var/run/docker.sock"
+  #     - "$PWD/wireguard/config:/config"
+  #     - "/lib/modules:/lib/modules:ro"
+  #   ports:
+  #     - 51820:51820/udp
+  #   sysctls:
+  #     - net.ipv4.conf.all.src_valid_mark=1
+  #   restart: unless-stopped
+  #   # network_mode: "bridge"
