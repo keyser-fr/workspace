@@ -2,7 +2,7 @@
 
     [backends.backend-xymon]
       [backends.backend-xymon.servers.server-xymon]
-         url = "http://sd-157459.dedibox.fr/"
+         url = "http://sd-xxx.dedibox.fr/"
 
   [frontends]
 

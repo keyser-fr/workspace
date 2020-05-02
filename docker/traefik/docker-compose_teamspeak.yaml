@@ -8,7 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: <mysql_root_password>
       MYSQL_DATABASE: teamspeak
     volumes:
-      - $PWD/ts3/mariadb/data:/var/lib/mysql
+      - "$PWD/ts3/mariadb/data:/var/lib/mysql"
 
   ts3_core:
     container_name: ts3_core_1
@@ -29,8 +29,8 @@ services:
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
-      - $PWD/ts3/core/whitelist.txt:/whitelist.txt
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - "$PWD/ts3/core/whitelist.txt:/whitelist.txt"
     ports:
       - '2008:2008'      # accounting port
       - '2010:2010/udp'  # weblist port
