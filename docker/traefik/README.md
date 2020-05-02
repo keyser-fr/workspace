@@ -1,6 +1,7 @@
-# https://blog.hypriot.com/post/microservices-bliss-with-docker-and-traefik/
+# Liens
 
-# https://docs.traefik.io/configuration/backends/web/
+* https://blog.hypriot.com/post/microservices-bliss-with-docker-and-traefik/
+* https://docs.traefik.io/configuration/backends/web/
 
 # For API with auth
 curl -u ${USER}:${PASSWORD} -sv "http://localhost:8080/api" | jq .
