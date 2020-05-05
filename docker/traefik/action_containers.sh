@@ -51,14 +51,8 @@ while true; do
 		all)
 		    COMPOSE_COMPONENTS="-f docker-compose_base.yaml -f docker-compose_addons.yaml"
 		    shift 2;;
-		base)
-		    COMPOSE_COMPONENTS="-f docker-compose_base.yaml"
-		    shift 2;;
-		addons)
-		    COMPOSE_COMPONENTS="-f docker-compose_addons.yaml"
-		    shift 2;;
-		teamspeak)
-		    COMPOSE_COMPONENTS="-f docker-compose_teamspeak.yaml"
+		base|addons|teamspeak|wireguard)
+		    COMPOSE_COMPONENTS="-f docker-compose_$2.yaml"
 		    shift 2;;
 		*)
 		    echo "[ERROR] Choose components <all|$(get_components_list|sed 's/ /|/g')>"; exit 1;;
