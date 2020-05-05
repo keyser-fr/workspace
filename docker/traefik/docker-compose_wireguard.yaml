@@ -1,5 +1,9 @@
 version: '3'
 
+# https://hub.docker.com/r/linuxserver/wireguard
+# https://github.com/linuxserver/docker-wireguard
+
+# Create wireguard network
 # docker network create wireguard
 
 # Services configuration
@@ -19,9 +23,9 @@ services:
       - PUID=1000
       - PGID=100
       - TZ=Europe/Paris
-      - SERVERURL=wireguard.scriptshell.net #optional
+      - SERVERURL=wireguard.example.com #optional
       - SERVERPORT=51820 #optional
-      - PEERS=2 #optional
+      - PEERS=4 #optional
       - PEERDNS=auto #optional
       - INTERNAL_SUBNET=10.13.13.0 #optional
     volumes:
