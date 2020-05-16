@@ -10,17 +10,17 @@
 # or (multiple servers)
 #   XYMONSERVERS="10.0.0.1 192.168.1.1"
 
-XYMONSERVERS="51.159.34.74"
+XYMONSERVERS="$(hostname -I)"
 
-# The defaults usually suffice for the rest of this file, 
-# but you can tweak the hostname that the client reports 
-# data with, and the OS name used (typically needed only on 
+# The defaults usually suffice for the rest of this file,
+# but you can tweak the hostname that the client reports
+# data with, and the OS name used (typically needed only on
 # RHEL or RHAS servers).
 
 # CLIENTHOSTNAME=""
 # CLIENTOS="rhel3"
 
-CLIENTHOSTNAME="sd-157459.dedibox.fr"
+CLIENTHOSTNAME="$(hostname -f)"
 
 # Optionally mount a tmpfs on /var/lib/xymon/tmp. On client systems this has
 # the advantage that client reports will continue to work even if the /var
@@ -29,4 +29,3 @@ CLIENTHOSTNAME="sd-157459.dedibox.fr"
 # reboots (xymond.chk).
 
 #TMPFSSIZE="5000000"
-
