@@ -9,6 +9,8 @@ services:
     ports:
       - "8200:8200"
     volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
       - "./vault/config:/vault/config"
       - "./vault/policies:/vault/policies"
       - "./vault/data:/vault/data"
@@ -16,7 +18,7 @@ services:
     environment:
       - "VAULT_ADDR=http://127.0.0.1:8200"
       - "VAULT_API_ADDR=http://127.0.0.1:8200"
-    command: "server -config=/vault/config/vault-config.json"
+    command: "server -config=/vault/config/vault-config.hcl"
     cap_add:
       - IPC_LOCK
     depends_on:
@@ -28,6 +30,8 @@ services:
       dockerfile: Dockerfile
     command: "agent -server -join consul-server-bootstrap -config-file=/consul/config/config.json"
     volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
       - "./consul/config/consul-config.json:/consul/config/config.json"
     depends_on:
       - consul-server-bootstrap
@@ -43,5 +47,7 @@ services:
       - "8500:8500"
     command: "agent -server -bind 0.0.0.0 -client 0.0.0.0 -bootstrap-expect 3 -config-file=/consul/config/config.json"
     volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
       - "./consul/config/consul-config.json:/consul/config/config.json"
       - "./consul/data:/consul/data"

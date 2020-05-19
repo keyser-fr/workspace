@@ -54,6 +54,8 @@ docker-compose exec consul bash
 
 See [http://localhost:8500/ui](http://localhost:8500/ui)
 
+* http://wireguard.scriptshell.net:8500/v1/internal/ui/services?dc=localhost
+
 ### To enter vault container
 
 ```bash
