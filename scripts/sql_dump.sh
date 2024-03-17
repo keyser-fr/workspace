@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
 set -e
+#set -x # debug mode => equivalent for bash -x command
 
 NUMBER_BACKUP=10;
-
-#set -x # debug mode => equivalent for bash -x command
 
 if [[ -z ${DATABASE} || -z ${PASSWORD} ]]; then
     echo -e 'DATABASE and/or PASSWORD not set\n'
