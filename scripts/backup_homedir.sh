@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+e#!/usr/bin/env bash
 
 set -e
 
@@ -24,7 +24,7 @@ for homedir in ${homedir_list}; do
     echo ${TAR_FILE}
     tar --posix --exclude=${EXCLUDE_DIR} --exclude=${EXCLUDE_FILE} --exclude=${EXCLUDE_IGNORE_FILE} -cpzf ${TAR_FILE} ${homedir} >/dev/null 2>&1;
     chown $(id -nu ${USER}):$(id -ng ${USER}) ${TAR_FILE}
-    # ls -1 ${TAR_FILE%_*_*}*.tar.gz | sort -u | head -n-${NUMBER_BACKUP} | xargs -r rm -v
+    ls -1 ${TAR_FILE%_*_*}*.tar.gz | sort -u | head -n-${NUMBER_BACKUP} | xargs -r rm -v
 done
 
 exit 0
