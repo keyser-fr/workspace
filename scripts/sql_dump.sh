@@ -1,12 +1,14 @@
-#! /bin/bash
+#!/usr/bin/env bash
+
+set -e
 
 NUMBER_BACKUP=10;
 
 #set -x # debug mode => equivalent for bash -x command
 
 if [[ -z ${DATABASE} || -z ${PASSWORD} ]]; then
-    echo 'Not database / password specified in environments variables\n'
-    echo "Usage: DATABASE='<database>' PASSWORD='<password>' ./sql_dump.sh"
+    echo -e 'DATABASE and/or PASSWORD not set\n'
+    echo -e "Usage: DATABASE='<database>' PASSWORD='<password>' ${0}"
     exit 1
 fi
 
