@@ -3,11 +3,30 @@
 set -e
 # set -x # debug mode => equivalent for bash -x command
 
+DATABASE=${DATABASE:-${1}}
 NUMBER_BACKUP=10
 
-if [[ -z ${DATABASE} || -z ${PASSWORD} ]]; then
-    echo -e 'DATABASE and/or PASSWORD not set\n'
-    echo -e "Usage: DATABASE='<database>' PASSWORD='<password>' ${0}"
+function usage() {
+    echo "Usage: ${0} <database>"
+}
+
+if [[ -z ${DATABASE} ]]; then
+    echo 'DATABASE not set'
+    usage
+    exit 1
+fi
+
+GITLAB_TOKEN=$(grep -Ew "gitlab_token" ${HOME}/.git-credentials | awk '{print $NF}')
+# Add .ansible_vaultkey file
+ANSIBLE_VAULTKEY_FILE=${ANSIBLE_VAULTKEY_FILE:-.ansible_vaultkey}
+touch ${HOME}/${ANSIBLE_VAULTKEY_FILE}
+curl --silent --request GET --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "https://gitlab.com/api/v4/groups/8268726/variables/_ansible_vaultkey" | jq -r '.value' > ${HOME}/${ANSIBLE_VAULTKEY_FILE}
+chmod 400 ${HOME}/${ANSIBLE_VAULTKEY_FILE}
+PASSWORD=${PASSWORD:-$(ansible-vault view --vault-password-file=${HOME}/${ANSIBLE_VAULTKEY_FILE} ${HOME}/rescue/sql/sql.free.fr/sql_vaulted.yaml | grep "SQL_PASSWORD:" | awk '{print $NF}' | tr -d "'")}
+
+if [[ -z ${PASSWORD} ]]; then
+    echo 'PASSWORD not set'
+    usage
     exit 1
 fi
 
@@ -43,5 +62,8 @@ fi
 
 rm -f curl.headers
 rm -f backup.php
+
+# Remove .ansible_vaultkey file
+find ${HOME} -type f -name "${ANSIBLE_VAULTKEY_FILE}" -delete
 
 exit 0
