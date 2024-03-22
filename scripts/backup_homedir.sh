@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+# set -e
 # set -x # debug mode => equivalent for bash -x command
 
 EXCLUDE_IGNORE_FILE="*~"
