@@ -18,9 +18,30 @@ if [[ -z ${DATABASE} ]]; then
 fi
 
 GITLAB_TOKEN=$(grep -Ew "gitlab_token" ${HOME}/.git-credentials | awk '{print $NF}')
+GITLAB_TOKEN_THRESHOLD_ALERT=604800
 # Add .ansible_vaultkey file
 ANSIBLE_VAULTKEY_FILE=${ANSIBLE_VAULTKEY_FILE:-.ansible_vaultkey}
 touch ${HOME}/${ANSIBLE_VAULTKEY_FILE}
+EXPIRED_AT=$(curl --silent --request GET --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "https://gitlab.com/api/v4/personal_access_tokens" | jq -r '.[].expires_at')
+EXPIRED_AT_TS=$(date --date="${EXPIRED_AT}" +"%s")
+NOW_DATE_TS=$(date --date="now" +"%s")
+
+SUP_FILE=${DEST_DIR}/gitlab_token.expired
+# Handle gitlab_token expiration
+if (( $(( ${EXPIRED_AT_TS} - ${NOW_DATE_TS} )) <= 0 )); then
+    echo "Gitlab Token expired"
+    exit 1
+elif (( $(( ${EXPIRED_AT_TS} - ${NOW_DATE_TS} )) <= ${GITLAB_TOKEN_THRESHOLD_ALERT} )); then
+    # Add file for supervision
+    if [[ ! -f ${SUP_FILE} ]]; then
+	touch ${SUP_FILE}
+    fi
+else
+    if [[ -f ${SUP_FILE} ]]; then
+	rm ${SUP_FILE}
+    fi
+fi
+
 curl --silent --request GET --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "https://gitlab.com/api/v4/groups/8268726/variables/_ansible_vaultkey" | jq -r '.value' > ${HOME}/${ANSIBLE_VAULTKEY_FILE}
 chmod 400 ${HOME}/${ANSIBLE_VAULTKEY_FILE}
 PASSWORD=${PASSWORD:-$(ansible-vault view --vault-password-file=${HOME}/${ANSIBLE_VAULTKEY_FILE} ${HOME}/${DEST_DIR}/sql_vaulted.yaml | grep "SQL_PASSWORD:" | awk '{print $NF}' | tr -d "'")}
