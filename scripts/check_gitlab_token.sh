@@ -6,11 +6,12 @@ set -e
 DEST_DIR="rescue/sql/sql.free.fr"
 GITLAB_TOKEN=$(grep -Ew "gitlab_token" ${HOME}/.git-credentials | awk '{print $NF}')
 GITLAB_TOKEN_THRESHOLD_ALERT=604800
-EXPIRED_AT=$(curl --silent --request GET --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "https://gitlab.com/api/v4/personal_access_tokens" | jq -r '.[].expires_at')
+GITLAB_ACCESS_INFO=$(curl --silent --request GET --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "https://gitlab.com/api/v4/personal_access_tokens" | jq -r '.[]')
+EXPIRED_AT=$(jq -r '. | select(.revoked==false).expires_at' <<< ${GITLAB_ACCESS_INFO})
 EXPIRED_AT_TS=$(date --date="${EXPIRED_AT}" +"%s")
 NOW_DATE_TS=$(date --date="now" +"%s")
-
 SUP_FILE=${DEST_DIR}/gitlab_token.expired
+
 # Handle gitlab_token expiration
 if (( $(( ${EXPIRED_AT_TS} - ${NOW_DATE_TS} )) <= 0 )); then
     echo "Gitlab Token expired"
