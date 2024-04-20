@@ -18,7 +18,6 @@ if [[ -z ${DATABASE} ]]; then
 fi
 
 GITLAB_TOKEN=$(grep -Ew "gitlab_token" ${HOME}/.git-credentials | awk '{print $NF}')
-GITLAB_TOKEN_THRESHOLD_ALERT=604800
 # Add .ansible_vaultkey file
 ANSIBLE_VAULTKEY_FILE=${ANSIBLE_VAULTKEY_FILE:-.ansible_vaultkey}
 touch ${HOME}/${ANSIBLE_VAULTKEY_FILE}
