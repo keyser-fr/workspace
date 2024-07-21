@@ -18,12 +18,11 @@ if [[ -z ${DATABASE} ]]; then
 fi
 
 GITLAB_TOKEN=$(grep -Ew "gitlab_token" ${HOME}/.git-credentials | awk '{print $NF}')
-# Add .ansible_vaultkey file
-ANSIBLE_VAULTKEY_FILE=${ANSIBLE_VAULTKEY_FILE:-.ansible_vaultkey}
-touch ${HOME}/${ANSIBLE_VAULTKEY_FILE}
-curl --silent --request GET --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "https://gitlab.com/api/v4/groups/8268726/variables/_ansible_vaultkey" | jq -r '.value' > ${HOME}/${ANSIBLE_VAULTKEY_FILE}
-chmod 400 ${HOME}/${ANSIBLE_VAULTKEY_FILE}
-PASSWORD=${PASSWORD:-$(ansible-vault view --vault-password-file=${HOME}/${ANSIBLE_VAULTKEY_FILE} ${HOME}/${DEST_DIR}/sql_vaulted.yaml | grep "SQL_PASSWORD:" | awk '{print $NF}' | tr -d "'")}
+# Add ${HOME}/.ansible_vaultkey file
+ANSIBLE_VAULTKEY_FILE=${ANSIBLE_VAULTKEY_FILE:-"${HOME}/.ansible_vaultkey"}
+touch ${ANSIBLE_VAULTKEY_FILE}
+curl --silent --request GET --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "https://gitlab.com/api/v4/groups/8268726/variables/_ansible_vaultkey" | jq -r '.value' > ${ANSIBLE_VAULTKEY_FILE}
+PASSWORD=${PASSWORD:-$(ansible-vault view --vault-password-file=${ANSIBLE_VAULTKEY_FILE} ${HOME}/${DEST_DIR}/sql_vaulted.yaml | grep "SQL_PASSWORD:" | awk '{print $NF}' | tr -d "'")}
 
 if [[ -z ${PASSWORD} ]]; then
     echo 'PASSWORD not set'
@@ -66,7 +65,7 @@ fi
 rm -f curl.headers
 rm -f backup.php
 
-# Remove .ansible_vaultkey file
-find ${HOME} -type f -name "${ANSIBLE_VAULTKEY_FILE}" -delete
+# Remove ${HOME}/.ansible_vaultkey file
+rm -f ${ANSIBLE_VAULTKEY_FILE}
 
 exit 0
