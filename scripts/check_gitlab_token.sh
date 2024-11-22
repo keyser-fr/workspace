@@ -3,6 +3,11 @@
 set -e
 # set -x # debug mode => equivalent for bash -x command
 
+# Variables
+NOW_DATE_TS=$(date --date="now" +"%s")
+DATE_30_DAYS_EXPIRATION=$(date --date="now +30 days" "+%Y-%m-%d")
+DEST_DIR="${HOME}/rescue/sql/sql.free.fr"
+SUP_FILE=${DEST_DIR}/gitlab_token.expired
 GITLAB_URL="https://gitlab.com"
 GITLAB_API="api"
 GITLAB_API_VERSION="v4"
@@ -11,12 +16,13 @@ GITLAB_TOKEN_FILE=${HOME}/.git-credentials
 GITLAB_TOKEN=$(grep -Ew "gitlab_token" ${GITLAB_TOKEN_FILE} | awk '{print $NF}')
 GITLAB_TOKEN_THRESHOLD_ALERT=7200 # 7200 (2 days) & 604800 (7 days)
 GITLAB_ACCESS_INFO=$(curl --silent --request GET --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "${GITLAB_API_URL}/personal_access_tokens?state=active")
+if [[ ${GITLAB_ACCESS_INFO} =~ "invalid_token" ]]; then
+    # echo "Invalid Token"
+    touch ${SUP_FILE}
+    exit 1
+fi
 GITLAB_TOKEN_EXPIRED_AT=$(jq -r '.[].expires_at' <<< ${GITLAB_ACCESS_INFO})
 GITLAB_TOKEN_EXPIRED_AT_TS=$(date --date="${GITLAB_TOKEN_EXPIRED_AT}" +"%s")
-NOW_DATE_TS=$(date --date="now" +"%s")
-DATE_30_DAYS_EXPIRATION=$(date --date="now +30 days" "+%Y-%m-%d")
-DEST_DIR="${HOME}/rescue/sql/sql.free.fr"
-SUP_FILE=${DEST_DIR}/gitlab_token.expired
 
 # Handle gitlab_token expiration
 if (( $(( ${GITLAB_TOKEN_EXPIRED_AT_TS} - ${NOW_DATE_TS} )) <= ${GITLAB_TOKEN_THRESHOLD_ALERT} )); then
