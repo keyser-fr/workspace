@@ -25,7 +25,7 @@ GITLAB_TOKEN_EXPIRED_AT=$(jq -r '.[].expires_at' <<< ${GITLAB_ACCESS_INFO})
 GITLAB_TOKEN_EXPIRED_AT_TS=$(date --date="${GITLAB_TOKEN_EXPIRED_AT}" +"%s")
 
 # Handle gitlab_token expiration
-if (( $(( ${GITLAB_TOKEN_EXPIRED_AT_TS} - ${NOW_DATE_TS} )) <= ${GITLAB_TOKEN_THRESHOLD_ALERT} )); then
+if (( $(( ${GITLAB_TOKEN_EXPIRED_AT_TS} - ${NOW_DATE_TS} )) < ${GITLAB_TOKEN_THRESHOLD_ALERT} )); then
     # Renew token (rotate)
     GITLAB_TOKEN_ID=$(jq -r ".[] | select(.expires_at == \"${GITLAB_TOKEN_EXPIRED_AT}\") .id" <<< ${GITLAB_ACCESS_INFO})
     GITLAB_TOKEN_ROTATE=$(curl --silent --request POST --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}"  "${GITLAB_API_URL}/personal_access_tokens/${GITLAB_TOKEN_ID}/rotate?expires_at=${DATE_30_DAYS_EXPIRATION}")
@@ -33,7 +33,7 @@ if (( $(( ${GITLAB_TOKEN_EXPIRED_AT_TS} - ${NOW_DATE_TS} )) <= ${GITLAB_TOKEN_TH
     chmod 600 ${GITLAB_TOKEN_FILE}
     echo "gitlab_token = ${GITLAB_TOKEN_RENEW}" > ${GITLAB_TOKEN_FILE}
     chmod 400 ${GITLAB_TOKEN_FILE}
-elif (( $(( ${GITLAB_TOKEN_EXPIRED_AT_TS} - ${NOW_DATE_TS} )) <= 0 )); then
+elif (( $(( ${GITLAB_TOKEN_EXPIRED_AT_TS} - ${NOW_DATE_TS} )) < 0 )); then
     echo "Gitlab Token expired"
     # Add file for supervision
     if [[ ! -f ${SUP_FILE} ]]; then
