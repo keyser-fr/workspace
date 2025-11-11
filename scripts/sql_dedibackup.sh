@@ -3,8 +3,19 @@
 # set -e
 # set -x # debug mode => equivalent for bash -x command
 
-DEST_DIR="${HOME}/rescue/sql/sql.free.fr"
+DATE_NOW=$(date +"%F_%T")
+SOURCE_DIR="${HOME}/rescue/sql/sql.free.fr"
+DEST_DIR="${HOME}/dedibackup/mysql/"
 
-$(which cp) -r ${DEST_DIR} ${HOME}/dedibackup/mysql/
+# $(which cp) -r ${SOURCE_DIR} ${DEST_DIR}
+$(which rsync) -avz ${SOURCE_DIR} ${DEST_DIR} #--dry-run
+RETVAL=${?}
+
+if [[ ${RETVAL} == 0 ]]; then
+    echo "[${DATE_NOW}] Synchronization OK"
+else
+    echo "[${DATE_NOW}] Synchronization KO"
+    exit 1
+fi
 
 exit 0
