@@ -8,7 +8,7 @@ SOURCE_DIR="${HOME}/rescue/sql/sql.free.fr"
 DEST_DIR="${HOME}/dedibackup/mysql/"
 
 # $(which cp) -r ${SOURCE_DIR} ${DEST_DIR}
-$(which rsync) -avz ${SOURCE_DIR} ${DEST_DIR} #--dry-run
+$(which rsync) -avz --human-readable --delete ${SOURCE_DIR} ${DEST_DIR} #--dry-run
 RETVAL=${?}
 
 if [[ ${RETVAL} == 0 ]]; then
