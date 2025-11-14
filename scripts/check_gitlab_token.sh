@@ -7,7 +7,7 @@ set -e
 NOW_DATE=$(date --date="now" "+%F %T")
 NOW_DATE_TS=$(date --date="now" +"%s")
 DATE_30_DAYS_EXPIRATION=$(date --date="now +30 days" "+%Y-%m-%d")
-DEST_DIR="${HOME}/rescue/sql/sql.free.fr"
+DEST_DIR=${DEST_DIR:-"${HOME}/dedibackup/backup/sql/sql.free.fr"}
 SUP_FILE=${DEST_DIR}/gitlab_token.expired
 GITLAB_URL="https://gitlab.com"
 GITLAB_API="api"
