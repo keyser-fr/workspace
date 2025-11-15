@@ -22,7 +22,7 @@ GITLAB_TOKEN=$(grep -Ew "gitlab_token" ${HOME}/.git-credentials | awk '{print $N
 ANSIBLE_VAULTKEY_FILE=${ANSIBLE_VAULTKEY_FILE:-"${HOME}/.ansible_vaultkey"}
 touch ${ANSIBLE_VAULTKEY_FILE}
 curl --silent --request GET --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" "https://gitlab.com/api/v4/groups/8268726/variables/_ansible_vaultkey" | jq -r '.value' > ${ANSIBLE_VAULTKEY_FILE}
-PASSWORD=${PASSWORD:-$(ansible-vault view --vault-password-file=${ANSIBLE_VAULTKEY_FILE} ${HOME}/${DEST_DIR}/sql_vaulted.yaml | grep "SQL_PASSWORD:" | awk '{print $NF}' | tr -d "'")}
+PASSWORD=${PASSWORD:-$(ansible-vault view --vault-password-file=${ANSIBLE_VAULTKEY_FILE} ${DEST_DIR}/sql_vaulted.yaml | grep "SQL_PASSWORD:" | awk '{print $NF}' | tr -d "'")}
 
 if [[ -z ${PASSWORD} ]]; then
     echo 'PASSWORD not set'
@@ -30,7 +30,7 @@ if [[ -z ${PASSWORD} ]]; then
     exit 1
 fi
 
-backup_dir="${HOME}/${DEST_DIR}/${DATABASE}"
+backup_dir="${DEST_DIR}/${DATABASE}"
 
 rm -f curl.headers
 rm -f backup.php
