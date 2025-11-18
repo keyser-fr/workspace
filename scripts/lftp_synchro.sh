@@ -9,7 +9,7 @@ DEST_DIR=${DEST_DIR:-"/dedibackup"}
 # LOG_DIR=${LOG_DIR:-"${HOME}/.local/share/lftp"} # default directory
 # LOGFILE=${LOGFILE:-"${LOG_DIR}/transfer_log"} # default file
 LOG_DIR=${LOG_DIR:-"${HOME}/var/log"}
-LOGFILE=${LOGFILE:-"${LOG_DIR}/dedibackup.log"}
+LOGFILE=${LOGFILE:-"${LOG_DIR}/lftp_transfer.log"}
 
 $(which lftp) ftp://auto:@dedibackup-dc3.online.net -e "set log:file/xfer ${LOGFILE}; mirror -e -R ${SOURCE_DIR} ${DEST_DIR}; quit"
 RETVAL=${?}
