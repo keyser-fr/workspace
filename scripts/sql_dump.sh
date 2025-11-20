@@ -3,6 +3,7 @@
 # set -e
 # set -x # debug mode => equivalent for bash -x command
 
+DATE_NOW=$(date +"%F_%T")
 DATABASE=${DATABASE:-${1}}
 NUMBER_BACKUP=10
 DEST_DIR=${DEST_DIR:-"${HOME}/dedibackup/backup/sql/sql.free.fr"}
@@ -41,7 +42,7 @@ if [ $? -ne 0 ]; then
     echo "Erreur curl" >&2
     exit 1
 else
-    echo "Backup MySQL for ${DATABASE} OK"
+    echo "[${DATE_NOW}] Backup MySQL for ${DATABASE} OK"
 fi
 
 grep -q "HTTP/1.1 200 OK" curl.headers
