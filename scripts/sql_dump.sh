@@ -6,7 +6,7 @@
 DATE_NOW=$(date +"%F_%T")
 DATABASE=${DATABASE:-${1}}
 NUMBER_BACKUP=10
-DEST_DIR=${DEST_DIR:-"${HOME}/dedibackup/backup/sql/sql.free.fr"}
+DEST_DIR=${DEST_DIR:-"${HOME}/dedibackup/sql/sql.free.fr"}
 
 function usage() {
     echo "Usage: ${0} <database>"

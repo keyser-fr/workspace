@@ -5,7 +5,7 @@
 
 DATE_NOW=$(date +"%F_%T")
 SOURCE_DIR=${SOURCE_DIR:-"${HOME}/rescue/sql/sql.free.fr"}
-DEST_DIR=${DEST_DIR:-"${HOME}/dedibackup/backup/sql"}
+DEST_DIR=${DEST_DIR:-"${HOME}/dedibackup/sql"}
 
 # $(which cp) -r ${SOURCE_DIR} ${DEST_DIR}
 $(which rsync) -avz --human-readable --delete ${SOURCE_DIR} ${DEST_DIR}/ #--dry-run
