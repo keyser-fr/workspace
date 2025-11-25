@@ -23,13 +23,16 @@ else
 fi
 
 for homedir in ${homedir_list}; do
-    DATE_BACKUP=$(date +"%F_%T")
+    DATE_NOW=$(date +%Y%m%d_%H%M%S)
+    DATE_BACKUP_START=$(date +"%F_%T")
     TAR_FILE="${HOME}/${DEDIBACKUP_HOMEDIR}/$(basename ${homedir})_${DATE_NOW}.tar.gz"
-    echo "[${DATE_BACKUP}] ${homedir}"
-    echo "added ${TAR_FILE}"
+    echo "[${DATE_BACKUP_START}][START] ${homedir}"
+    echo "added   '${TAR_FILE}'"
     tar --posix --exclude=${EXCLUDE_DIR} --exclude=${EXCLUDE_ANSIBLE_VAULTKEY_FILE} --exclude=${EXCLUDE_GIT_CREDENTIALS_FILE} --exclude=${EXCLUDE_IGNORE_FILE} -cpzf ${TAR_FILE} ${homedir} >/dev/null 2>&1;
     chown $(id -nu ${USER}):$(id -ng ${USER}) ${TAR_FILE}
     ls -1 ${TAR_FILE%_*_*}*.tar.gz | sort -u | head -n-${NUMBER_BACKUP} | xargs -r rm -v
+    DATE_BACKUP_END=$(date +"%F_%T")
+    echo "[${DATE_BACKUP_END}][END] ${homedir}"
 done
 
 exit 0
