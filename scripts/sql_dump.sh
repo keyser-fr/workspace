@@ -7,6 +7,7 @@ DATE_NOW=$(date +"%F_%T")
 DATABASE=${DATABASE:-${1}}
 NUMBER_BACKUP=10
 DEST_DIR=${DEST_DIR:-"${HOME}/dedibackup/sql/sql.free.fr"}
+HTTP_VERSION=2
 
 function usage() {
     echo "Usage: ${0} <database>"
@@ -36,37 +37,36 @@ backup_dir="${DEST_DIR}/${DATABASE}"
 rm -f curl.headers
 rm -f backup.php
 
-curl -s -S -O -D curl.headers -d "login=$DATABASE&password=$PASSWORD&check=1&all=1" http://sql.free.fr/backup.php
+curl -s -S -O -D curl.headers -d "login=${DATABASE}&password=${PASSWORD}&check=1&all=1" https://sql.free.fr/backup.php
 
 if [ $? -ne 0 ]; then
     echo "Erreur curl" >&2
     exit 1
-else
-    echo "[${DATE_NOW}] Backup MySQL for ${DATABASE} OK"
 fi
 
-grep -q "HTTP/1.1 200 OK" curl.headers
+grep -q "HTTP/${HTTP_VERSION:-2} 200" curl.headers
 if [ $? -eq 0 ]; then
-    grep -q "Content-Disposition: attachment" curl.headers
-    if [ $? -eq 0 ]
-    then
-	filename=$(grep "Content-Disposition: attachment" curl.headers | sed -e 's/.*filename="//;s/";.*$//')
-	filename=${filename%.gz}.sql.gz
+    grep -q "content-disposition: attachment;" curl.headers
+    if [ $? -eq 0 ]; then
 	filename_prefix='backup_mysql'
+	filename_suffix='sql.gz'
+	filename=$(grep "filename" curl.headers | awk -F'filename="' '{ sub(/".*/, "", $2); print $2 }')
+	filename=${filename%.gz}.${filename_suffix}
 	mv backup.php ${backup_dir}/${filename_prefix}_${filename}
 	echo "Saved in ${backup_dir}/${filename_prefix}_${filename}"
     fi
-    ls -1 ${backup_dir}/${filename_prefix}_*.sql.gz | sort -u | head -n-${NUMBER_BACKUP} | xargs -r rm -v
+    ls -1 ${backup_dir}/${filename_prefix}_*.${filename_suffix} | sort -u | head -n-${NUMBER_BACKUP} | xargs -r rm -v
 else
     echo -n "Error : " >&2
-    grep "HTTP/1.1 " curl.headers >&2
+    grep "HTTP" curl.headers >&2
     exit 1
 fi
 
+# Cleanup
 rm -f curl.headers
 rm -f backup.php
-
-# Remove ${HOME}/.ansible_vaultkey file
 rm -f ${ANSIBLE_VAULTKEY_FILE}
+
+echo "[${DATE_NOW}] Backup MySQL for ${DATABASE} OK"
 
 exit 0
