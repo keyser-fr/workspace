@@ -5,12 +5,14 @@
 
 # DATE_NOW=$(date +"%F_%T")
 DATE_NOW=$(date +%Y%m%d_%H%M%S)
-EXCLUDE_IGNORE_FILE="*~"
-EXCLUDE_ANSIBLE_VAULTKEY_FILE="${HOME}/.ansible_vaultkey"
-EXCLUDE_GIT_CREDENTIALS_FILE="${HOME}/.git-credentials"
-EXCLUDE_DIR="${HOME}/dedibackup"
-DEDIBACKUP_HOMEDIR="dedibackup/system/home"
 NUMBER_BACKUP=3
+DEDIBACKUP_HOMEDIR="dedibackup/system/home"
+EXCLUDE_FILES=(
+    "*~"
+    "${HOME}/dedibackup/"
+    "${HOME}/.ansible_vaultkey"
+    "${HOME}/.git-credentials"
+)
 
 function usage() {
     echo "Usage: ${0} <homedir_name>"
@@ -22,13 +24,18 @@ else
     homedir_list=$(ls -1d /home/* | grep -Ev "lost\+found")
 fi
 
+EXCLUDE_TAR=()
+for exclude_file in ${EXCLUDE_FILES[@]}; do
+    EXCLUDE_TAR+=(--exclude="${exclude_file}")
+done
+
 for homedir in ${homedir_list}; do
     DATE_NOW=$(date +%Y%m%d_%H%M%S)
     DATE_BACKUP_START=$(date +"%F_%T")
     TAR_FILE="${HOME}/${DEDIBACKUP_HOMEDIR}/$(basename ${homedir})_${DATE_NOW}.tar.gz"
     echo "[${DATE_BACKUP_START}][START] ${homedir}"
     echo "added   '${TAR_FILE}'"
-    tar --posix --exclude=${EXCLUDE_DIR} --exclude=${EXCLUDE_ANSIBLE_VAULTKEY_FILE} --exclude=${EXCLUDE_GIT_CREDENTIALS_FILE} --exclude=${EXCLUDE_IGNORE_FILE} -cpzf ${TAR_FILE} ${homedir} >/dev/null 2>&1;
+    tar --posix ${EXCLUDE_TAR[@]} -cpzf ${TAR_FILE} ${homedir} >/dev/null 2>&1;
     chown $(id -nu ${USER}):$(id -ng ${USER}) ${TAR_FILE}
     ls -1 ${TAR_FILE%_*_*}*.tar.gz | sort -u | head -n-${NUMBER_BACKUP} | xargs -r rm -v
     DATE_BACKUP_END=$(date +"%F_%T")
