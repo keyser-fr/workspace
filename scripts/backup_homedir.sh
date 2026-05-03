@@ -9,7 +9,7 @@ NUMBER_BACKUP=3
 DEDIBACKUP_HOMEDIR="dedibackup/system/home"
 EXCLUDE_FILES=(
     "*~"
-    "${HOME}/dedibackup/"
+    "${HOME}/dedibackup"
     "${HOME}/.ansible_vaultkey"
     "${HOME}/.git-credentials"
 )
